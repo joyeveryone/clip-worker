@@ -13,7 +13,6 @@ RUN npm install
 
 COPY . .
 
-# Railway provides the PORT automatically
 EXPOSE 8080
 
 CMD ["node", "server.js"]
