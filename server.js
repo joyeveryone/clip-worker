@@ -1,36 +1,22 @@
-const express = require("express");
-const cors = require("cors");
-const { exec } = require("child_process");
+app.post("/api/clip", (req, res) => {
+  const { videoUrl, startTime, endTime, clipId } = req.body;
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+  const videoFile = "video.mp4";
+  const output = `clip_${clipId}.mp4`;
 
-app.post("/process", (req, res) => {
-  const { videoUrl, clips } = req.body;
-
-  exec(`yt-dlp -f mp4 -o video.mp4 ${videoUrl}`, (err) => {
+  exec(`yt-dlp -f mp4 -o ${videoFile} ${videoUrl}`, (err) => {
     if (err) return res.status(500).send("Download failed");
 
-    const results = [];
+    exec(
+      `ffmpeg -ss ${startTime} -to ${endTime} -i ${videoFile} -c copy ${output}`,
+      (err) => {
+        if (err) return res.status(500).send("Clip creation failed");
 
-    clips.forEach((clip, i) => {
-      const output = `clip_${i}.mp4`;
-
-      exec(
-        `ffmpeg -ss ${clip.start} -to ${clip.end} -i video.mp4 -c copy ${output}`,
-        () => {}
-      );
-
-      results.push({
-        url: `/clips/${output}`,
-      });
-    });
-
-    res.json({ clips: results });
+        res.json({
+          status: "ready",
+          fileUrl: `/clips/${output}`,
+        });
+      }
+    );
   });
 });
-
-app.use("/clips", express.static("."));
-
-app.listen(3000, () => console.log("Clip worker running"));
