@@ -1,10 +1,16 @@
 FROM node:18
 
-RUN apt-get update && apt-get install -y ffmpeg yt-dlp
+RUN apt-get update && \
+    apt-get install -y ffmpeg python3 python3-pip && \
+    pip3 install yt-dlp
 
 WORKDIR /app
-COPY . .
 
+COPY package*.json ./
 RUN npm install
 
-CMD ["npm", "start"]
+COPY . .
+
+EXPOSE 8080
+
+CMD ["node", "server.js"]
